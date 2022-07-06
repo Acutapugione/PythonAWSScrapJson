@@ -5,6 +5,8 @@ VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SimpleHTTPScrapper", "SimpleHTTPScrapper\SimpleHTTPScrapper.pyproj", "{F497C6D5-5F99-4F4E-B57B-D921568CD04E}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "JsonParser", "JsonParser\JsonParser.pyproj", "{6403D6A4-F1AD-4631-AB84-91A75C529442}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F497C6D5-5F99-4F4E-B57B-D921568CD04E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F497C6D5-5F99-4F4E-B57B-D921568CD04E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6403D6A4-F1AD-4631-AB84-91A75C529442}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6403D6A4-F1AD-4631-AB84-91A75C529442}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

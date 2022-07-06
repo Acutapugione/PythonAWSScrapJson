@@ -1,0 +1,44 @@
+{
+  "prices": [
+    {
+      "tag": "372212622160271",
+      "price": 1787.51,
+      "fat": "2=",
+      "conf": "U+",
+      "dead_weight": "405.33",
+      "price_per_kg": "4.41"
+    },
+    {
+      "tag": "372212622150270",
+      "price": 1619.48,
+      "fat": "2+",
+      "conf": "U-",
+      "dead_weight": "377.50",
+      "price_per_kg": "4.29"
+    },
+    {
+      "tag": "372212622190266",
+      "price": 1704.9,
+      "fat": "2+",
+      "conf": "U=",
+      "dead_weight": "410.82",
+      "price_per_kg": "4.15"
+    },
+    {
+      "tag": "372212262620341",
+      "price": 1755.49,
+      "fat": "3-",
+      "conf": "U=",
+      "dead_weight": "403.56",
+      "price_per_kg": "4.35"
+    },
+    {
+      "tag": "372212622120268",
+      "price": 1755.68,
+      "fat": "2+",
+      "conf": "U-",
+      "dead_weight": "409.25",
+      "price_per_kg": "4.29"
+    }
+  ]
+}
