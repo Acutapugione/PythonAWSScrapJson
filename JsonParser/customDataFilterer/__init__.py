@@ -28,11 +28,15 @@ class DataFilterer:
    set_filter(filter_prop)
         Passes an instance filter
    """
+
     ### Ctor
     def __init__(self, data:list, filter_prop:dict):
         self.__data = data
         self.check_params(filter_prop)
         self.__filter_prop = filter_prop
+
+
+
     ### Methods
     def check_params(self, filter_options = None):
         r"""Method for checking set and passed parameters

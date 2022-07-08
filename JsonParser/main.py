@@ -3,13 +3,17 @@
 
 import json
 from customDataFilterer import DataFilterer
-
+from customBotoHandler import AdvancedBotoHandler as bth
 
 def parse_json_file(file_path=""):
-    with open(file_path, "r", encoding="utf-8") as m_file:
-            return json.load(m_file)
 
-def main():
+    try:
+        with open(file_path, "r", encoding="utf-8") as m_file:
+                return json.load(m_file)
+    except Exception as _ex:
+        print(_ex)
+
+def step_by_step_application():
     try:
         # parse data from file
         data = parse_json_file("DataFolder/take-home.json").get("prices")
@@ -37,6 +41,13 @@ def main():
 
     except Exception as _ex:
         print(_ex)
+
+def main():
+    boto_handler = bth()
+    for key, val in boto_handler.send_message(message = 'Hello>>>\nMy name is Dmytro!\nI\'m so happy to see you!!!').items():
+        print(f'{key} => {val}')
+
+    #step_by_step_application()
 
 
 if __name__ == "__main__":
