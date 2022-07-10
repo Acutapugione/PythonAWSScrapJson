@@ -24,6 +24,7 @@
   <ItemGroup>
     <Folder Include="customBotoHandler\" />
     <Folder Include="customDataFilterer\" />
+    <Folder Include="customLiterals\" />
     <Folder Include="DataFolder\" />
   </ItemGroup>
   <ItemGroup>
@@ -35,6 +36,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="customDataFilterer\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="customLiterals\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.py" />

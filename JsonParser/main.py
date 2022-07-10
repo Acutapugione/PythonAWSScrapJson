@@ -1,9 +1,18 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
 
 import json
 from customDataFilterer import DataFilterer
 from customBotoHandler import AdvancedBotoHandler as bth
+import boto3
+from customLiterals import UrlLiteral
+import re
+  
+def first_url(text:str = ""):
+    urls = re.findall(UrlLiteral, text)      
+    return [x[0] for x in urls]
 
 def parse_json_file(file_path=""):
 
@@ -42,11 +51,52 @@ def step_by_step_application():
     except Exception as _ex:
         print(_ex)
 
-def main():
-    boto_handler = bth()
-    for key, val in boto_handler.send_message(message = 'Hello>>>\nMy name is Dmytro!\nI\'m so happy to see you!!!').items():
-        print(f'{key} => {val}')
+def delete_queues():
+    """
+    import boto3
+    client = boto3.client('sqs')
+    q = client.create_queue(QueueName='foo')
+    #{ Some code here }
+    
+    client.delete_queue(QueueUrl=q['QueueUrl'])
+    """
+    queues = boto3.resource('sqs').queues.all()
+    for queue in queues:
+        boto3.client('sqs').delete_queue(QueueUrl=queue.url)#'QueueUrl']
+        print(f'del queue url{queue.url}')
 
+def main():
+    try:
+
+        customBoto = bth()
+        customBoto.send_message(message = 'Hello>>>\nMy name is Dmytro!\nI\'m so happy to see you!!!')
+        
+        messages = customBoto.receive_messages(max_number = 1, wait_time = 10)
+        if messages:
+            if messages.get('Messages'):
+                for item in messages.get('Messages'):
+                    if item.get('Body'):
+                        ms_body = item.get('Body')
+                        break
+        url = first_url(ms_body)
+        if url:
+            print(url)
+
+        #for mess in messages.get('Messages'):
+        #    print(f'Message #{mess.get("MessageId")}\nBody:{mess.get("Body")}')
+    except Exception as _ex:
+        print(_ex)
+    #del customBoto
+
+    #delete_queues()
+    
+    #boto_handler.send_message(message = 'Hello>>>\nMy name is Dmytro!\nI\'m so happy to see you!!!')
+
+    #messages = boto_handler.receive_messages(max_number = 10, wait_time = 15)
+    #print(messages)
+    #for mess in messages:
+    #    print(f'Message #{mess.get("MessageId")}\nBody:{mess.body}')
+    #    mess.delete()
     #step_by_step_application()
 
 

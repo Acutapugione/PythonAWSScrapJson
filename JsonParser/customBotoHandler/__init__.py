@@ -23,7 +23,7 @@ try:
         """
 
 
-        def __init__(self, s3_res = None, sqs_res = None, queue_res = None):
+        def __init__(self, s3_res = None, sqs_res = None, queue_res = None, sqs_client = None):
             try:
                 print('*'*80)
                 print('BotoHandler loading...')
@@ -42,13 +42,43 @@ try:
                 else:
                     self._queue_res = self.generate_queue_res(delay = 15)
                 
-
+                if sqs_client is not None:
+                    self._sqs_client = sqs_client
+                else:
+                    self._sqs_client = boto3.client('sqs')
+                
                 print('*'*80)
                 print('BotoHandler loaded.')
                 print('*'*80)
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
 
+        def __del__(self):
+            print(f'Del queue res - {self.queue_res.url.split("/")[-1].strip()}')
+            del self.queue_res
+            print(f'Del sqs client - {self.sqs_client}')
+            del self.sqs_client #>>> del self.generated_queues
+            print(f'Del sqs resource - {self.sqs_res}')
+            del self.sqs_res 
+            print(f'Del s3 resource - {self.s3_res}')
+            del self.s3_res
+
+        # PROPERTY sqs_client
+        @property 
+        def sqs_client(self): 
+            return self._sqs_client
+
+        @sqs_client.setter
+        def sqs_client(self, client = None):
+            if client is not None:
+                self._sqs_client = client
+
+        @sqs_client.deleter
+        def sqs_client(self):
+            print('Deleting generated queues...')
+            del self.generated_queues
+            print('Done')
+            del self._sqs_client
 
         # PROPERTY sqs_res
         @property
@@ -66,7 +96,6 @@ try:
         
         @sqs_res.deleter
         def sqs_res(self):
-            del self.generated_queues
             del self._sqs_res
 
         # PROPERTY queue_res
@@ -123,15 +152,20 @@ try:
             counter = 0
             total = len(self._generated_queues)
 
+            #queues = boto3.resource('sqs').queues.all()
+            #for queue in queues:
+            #    boto3.client('sqs').delete_queue(QueueUrl=queue.url)#'QueueUrl']
+            #    print(f'del queue url{queue.url}')
+
             for queue_url in self._generated_queues:
                 counter =+ 1
                 try:
                     print(f'Remove {counter}st object out of {total}.')
-                    self._sqs_res.delete_queue(QueueUrl=queue_url)    
+                    self._sqs_client.delete_queue(QueueUrl=queue_url)    
                 except Exception as _ex:
                     print(f'Object {counter} could not be deleted.\nInner exception: {_ex}')
-            del self._generated_queues
 
+            del self._generated_queues
 
 
         # PROPERTY s3_res
@@ -203,7 +237,8 @@ try:
         def __init__(self, s3_res = None, 
                         sqs_res = None, queue_res = None):
             super().__init__( s3_res, sqs_res, queue_res)
-
+        def __del__(sel):
+            super().__del__()
         def send_message(self, queue = None, queue_name:str = '', message:any = {}, indx = 0):
             try:
                 if indx > 1:
@@ -213,6 +248,7 @@ try:
                         return queue.send_message(
                             MessageBody = message.get('body'),
                             MessageAttributes = message.get('attributes')
+
                             )
                     elif isinstance(message, (set, tuple, list)):
                         response = []
@@ -238,7 +274,7 @@ try:
                                 }
                             )
                 elif len( queue_name ) > 0:
-                    if indx == 1: 
+                    if indx >= 1: 
                         return self.send_message(
                             queue = super().queue_res,
                             message=message,
@@ -253,6 +289,29 @@ try:
                         queue = super().queue_res,
                         message = message, 
                         indx = indx +1 
+                        )
+            except Exception as _ex:
+                print(f'{_ex} in {self.__class__.__name__}')
+
+        def receive_messages(self, queue = None, queue_name:str = '', max_number=10, wait_time=10):
+            try:
+                if queue is not None:
+                    return super().sqs_client.receive_message(
+                        QueueUrl = queue.url,
+                        MaxNumberOfMessages = max_number,
+                        WaitTimeSeconds = wait_time
+                        )
+                elif len( queue_name ) > 0:
+
+                    return self.receive_messages(
+                        queue = super().sqs_res.get_queue_by_name(queue_name),
+                        max_number = max_number,
+                        wait_time = max_number
+                        )
+                return super().sqs_client.receive_message(
+                        QueueUrl = super().queue_res.url,
+                        MaxNumberOfMessages = max_number,
+                        WaitTimeSeconds = wait_time
                         )
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
