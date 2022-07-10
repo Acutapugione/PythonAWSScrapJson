@@ -48,32 +48,35 @@ class DataFilterer:
         """
         if not isinstance(self.get_data, list):
             raise ValueError(f'The passed parameter {type(self.get_data)}.\ndoes not match the {type(list())} of {type(dict())} layout.')
-        for item in self._data:
+        for item in self.__data:
             if not isinstance(item,dict):
                 raise ValueError(f'The passed parameter {type(self.get_data)}.\ndoes not match the {type(list())} of {type(dict())} layout.')
-        if not isinstance(self.get_filter, dict):
-            raise ValueError(
-                f'The passed parameter {type(self.get_filter)}.'\
-                f'\ndoes not match the {type(dict())} layout.'
-                )
-        if not set(['target', 'rule']).issubset(self.get_filter.keys()):
-            raise ValueError(
-                    'Passed filter is missing required parameters:\n'\
-                    f'{"target" if "target" not in self.get_filter else ""} '\
-                    f'{"values" if "values" not in self.get_filter else ""}.'
-                )
         if filter_options is not None:
             if not isinstance(filter_options, dict):
                 raise ValueError(
                     f'The passed parameter {type(filter_options)}.'\
                     f'\ndoes not match the {type(dict())} layout.'
                     )
-            if not set(['target', 'rule']).issubset(self.filter_options.keys()):
+            if not set(['target', 'rule']).issubset(filter_options.keys()):
                 raise ValueError(
                         'Passed filter is missing required parameters:\n'\
                         f'{"target" if "target" not in filter_options else ""} '\
                         f'{"values" if "values" not in filter_options else ""}.'
                     )
+            return
+        if self.__filter_prop is not None:
+            if not isinstance(self.get_filter, dict):
+                raise ValueError(
+                    f'The passed parameter {type(self.get_filter)}.'\
+                    f'\ndoes not match the {type(dict())} layout.'
+                    )
+            if not set(['target', 'rule']).issubset(self.get_filter.keys()):
+                raise ValueError(
+                        'Passed filter is missing required parameters:\n'\
+                        f'{"target" if "target" not in self.get_filter else ""} '\
+                        f'{"values" if "values" not in self.get_filter else ""}.'
+                    )
+        
 
     ### Properties
     @property

@@ -4,16 +4,16 @@
 try:
     print('*'*80)
     print('Please, wait for the libraries to be ready...')
-    print('*'*80)
+    
 
     from random import randint
     from datetime import datetime
     import boto3
     import socket
 
-    print('*'*80)
+
     print('Libraries successfully prepared!')
-    print('*'*80)
+
 
 
     class CustomBotoHandler:
@@ -25,9 +25,6 @@ try:
 
         def __init__(self, s3_res = None, sqs_res = None, queue_res = None, sqs_client = None):
             try:
-                print('*'*80)
-                print('BotoHandler loading...')
-                print('*'*80)
                 self._generated_queues = []
                 if s3_res is not None:
                     self._s3_res = s3_res
@@ -47,9 +44,6 @@ try:
                 else:
                     self._sqs_client = boto3.client('sqs')
                 
-                print('*'*80)
-                print('BotoHandler loaded.')
-                print('*'*80)
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
 

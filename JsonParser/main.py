@@ -22,10 +22,12 @@ def parse_json_file(file_path=""):
     except Exception as _ex:
         print(_ex)
 
-def step_by_step_application():
+def run_parse(file_path:str = ''):
     try:
         # parse data from file
-        data = parse_json_file("DataFolder/take-home.json").get("prices")
+        data = parse_json_file(file_path)
+        prices = data.get("prices")
+        #data = parse_json_file("DataFolder/take-home.json").get("prices")
         
         # create filter dictionary with target and rule options
         filter_dictionary = {  
@@ -38,7 +40,7 @@ def step_by_step_application():
         create custom class object
         with part of data 'prices' and filter dictionary
         """
-        data_filter = DataFilterer(data, filter_dictionary)
+        data_filter = DataFilterer(prices, filter_dictionary)
 
         # get filtered prices and filter
         filtered_data_prices, allowed_filter = data_filter.get_filtered  
@@ -47,6 +49,8 @@ def step_by_step_application():
         print(filtered_data_prices)  
         # show filter
         print(allowed_filter.get('name'))  
+        data["prices"] = filtered_data_prices
+        return data
 
     except Exception as _ex:
         print(_ex)
@@ -65,39 +69,50 @@ def delete_queues():
         boto3.client('sqs').delete_queue(QueueUrl=queue.url)#'QueueUrl']
         print(f'del queue url{queue.url}')
 
-def main():
+def get_s3_params(s3_uri:str = ''):
     try:
 
-        customBoto = bth()
-        customBoto.send_message(message = 'Hello>>>\nMy name is Dmytro!\nI\'m so happy to see you!!!')
-        
-        messages = customBoto.receive_messages(max_number = 1, wait_time = 10)
-        if messages:
-            if messages.get('Messages'):
-                for item in messages.get('Messages'):
-                    if item.get('Body'):
-                        ms_body = item.get('Body')
-                        break
-        url = first_url(ms_body)
-        if url:
-            print(url)
-
-        #for mess in messages.get('Messages'):
-        #    print(f'Message #{mess.get("MessageId")}\nBody:{mess.get("Body")}')
+        #s3_uri => s3://mybucketname/DataFolder1/DataFolder2/take-home.json
+        full_path = s3_uri.split(r'//')[-1] # mybucketname/DataFolder1/DataFolder2/take-home.json
+        bucket_name = full_path.split('/')[0] # mybucketname
+        file_path =  '/'.join(full_path.split('/')[1 : ]) # /DataFolder1/DataFolder2/take-home.json
+        return bucket_name, file_path
     except Exception as _ex:
         print(_ex)
-    #del customBoto
 
-    #delete_queues()
+def receive_s3_uri(botoHandler: bth = None):
+    try:
+        messages = botoHandler.receive_messages(max_number = 1, wait_time = 15)
+        return messages.get('Messages')[0].get('Body')
+    except Exception as _ex:
+        print(_ex)
+
+def main():
+    try:
+        s3_cli = boto3.client('s3')
+        customBoto = bth()
+        customBoto.send_message(message = 's3://dementeewdmyrtoigorovitch/DataFolder/take-home.json')
+        
+        #Read message from SQS queue with a link to an object in S3 bucket
+        bucket_name, file_path = get_s3_params(receive_s3_uri(customBoto))
+
+        #Get data from file (as a JSON), parse it, and get tag(s) ending with 1
+        with open('DataFolder/1.json', 'wb') as f:
+            s3_cli.download_fileobj(bucket_name, file_path, f)
+        
+        # parse data from file
+        parsed_data = run_parse('DataFolder/1.json')
+        with open('DataFolder/Filtered1.json', 'w') as f:
+            json.dump(parsed_data, f, ensure_ascii=False, indent=4)
+        
+        
+        with open("DataFolder/Filtered1.json", "rb") as f:
+            s3_cli.upload_fileobj(f, bucket_name, 'Filtered1.json')
+        
+    except Exception as _ex:
+        print(_ex)
     
-    #boto_handler.send_message(message = 'Hello>>>\nMy name is Dmytro!\nI\'m so happy to see you!!!')
-
-    #messages = boto_handler.receive_messages(max_number = 10, wait_time = 15)
-    #print(messages)
-    #for mess in messages:
-    #    print(f'Message #{mess.get("MessageId")}\nBody:{mess.body}')
-    #    mess.delete()
-    #step_by_step_application()
+    
 
 
 if __name__ == "__main__":
