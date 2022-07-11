@@ -82,7 +82,7 @@ def main():
         customBoto = AdvancedBotoHandler()
         s3_cli = customBoto.s3_client
 
-        customBoto.send_message(message = 's3://dementeewdmyrtoigorovitch/DataFolder/take-home.json')
+        customBoto.send_message(message = 's3://bucketName/DataFolder/take-home.json')
         
         #Read message from SQS queue with a link to an object in S3 bucket
         bucket_name, file_path = get_s3_params(receive_s3_uri(customBoto))
@@ -111,15 +111,15 @@ def main():
         s3_uri = f's3://{bucket_name}/{new_file_path}'
         customBoto.send_message(message = s3_uri)
         
-        email_adress = [
-            'acuta.pugione@gmail.com',
+        emails_dest = [
+            'example@io.com',
             ]
         body_text = f'''This letter is the result of an application that filtered the data from the "{file_path}" file and saved it to the "{new_file_path}" file.
         Please review the attachment and make sure it is correct.'''
         
         send_email_with_attachment(
-            email_src = 'acuta.pugione@gmail.com',
-            emails_dest = email_adress,
+            email_src = 'example@io.com',
+            emails_dest = emails_dest,
             subject_text = f'Filtered file in {bucket_name}',
             body_text = body_text,
             file_path = new_file_path
