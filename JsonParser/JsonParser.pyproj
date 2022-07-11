@@ -41,6 +41,7 @@
     <Compile Include="customLiterals\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="email_mime.py" />
     <Compile Include="main.py" />
   </ItemGroup>
   <ItemGroup>

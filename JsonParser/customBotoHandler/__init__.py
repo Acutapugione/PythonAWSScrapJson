@@ -2,83 +2,57 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 try:
-    print('*'*80)
-    print('Please, wait for the libraries to be ready...')
-    
-
     from random import randint
     from datetime import datetime
     import boto3
     import socket
 
-
-    print('Libraries successfully prepared!')
-
-
+    AWS_REGION = "us-east-1"
 
     class CustomBotoHandler:
         """
         This class provides advanced capabilities for using boto3.
         There is control over the generated queue resources.
+        
+        sqs_resource, 
+        sqs_client, 
+        s3_resource, 
+        s3_client, 
+        region_name, 
+        queue_resource
+        
         """
+        #constructor
+        def __init__(self, sqs_resource = None, sqs_client = None, s3_resource = None, s3_client = None, region_name:str = '', queue_resource = None):
+            if region_name is None or len(region_name)==0:
+                region_name = AWS_REGION
+            self._region_name = region_name
+            self._generated_queues = []
 
+            #sqs sector
+            self._sqs_res = self.get_boto_object(boto_name = 'resource', boto_specify = 'sqs', instance = sqs_resource)
+            self._sqs_client = self.get_boto_object(boto_name = 'client', boto_specify = 'sqs', instance = sqs_client)
+                               
+            #s3 sector
+            self._s3_res = self.get_boto_object(boto_name = 'resource', boto_specify = 's3', instance = s3_resource)
+            self._s3_client = self.get_boto_object(boto_name = 'client', boto_specify = 's3', instance = s3_client)
 
-        def __init__(self, s3_res = None, sqs_res = None, queue_res = None, sqs_client = None):
-            try:
-                self._generated_queues = []
-                if s3_res is not None:
-                    self._s3_res = s3_res
-                else:
-                    self._s3_res = boto3.resource('s3')
-                if sqs_res is not None:
-                    self._sqs_res = sqs_res
-                else:
-                    self._sqs_res = boto3.resource('sqs')
-                if queue_res is not None:
-                    self._queue_res = queue_res
-                else:
-                    self._queue_res = self.generate_queue_res(delay = 15)
-                
-                if sqs_client is not None:
-                    self._sqs_client = sqs_client
-                else:
-                    self._sqs_client = boto3.client('sqs')
-                
-            except Exception as _ex:
-                print(f'{_ex} in {self.__class__.__name__}')
+            #queue sector
+            self._queue_res = self.get_boto_object(boto_name = 'queue', instance = queue_resource)
 
+        #destructor
         def __del__(self):
-            print(f'Del queue res - {self.queue_res.url.split("/")[-1].strip()}')
-            del self.queue_res
-            print(f'Del sqs client - {self.sqs_client}')
-            del self.sqs_client #>>> del self.generated_queues
-            print(f'Del sqs resource - {self.sqs_res}')
-            del self.sqs_res 
-            print(f'Del s3 resource - {self.s3_res}')
+            del self._queue_res
+            del self.s3_client
             del self.s3_res
-
-        # PROPERTY sqs_client
-        @property 
-        def sqs_client(self): 
-            return self._sqs_client
-
-        @sqs_client.setter
-        def sqs_client(self, client = None):
-            if client is not None:
-                self._sqs_client = client
-
-        @sqs_client.deleter
-        def sqs_client(self):
-            print('Deleting generated queues...')
-            del self.generated_queues
-            print('Done')
-            del self._sqs_client
-
-        # PROPERTY sqs_res
+            del self.sqs_client
+            del self.sqs_res 
+            del self._region_name
+            
+        # sqs_res
         @property
         def sqs_res(self):
             return self._sqs_res
-
         @sqs_res.setter
         def sqs_res(self, new_sqs_res):
             try:
@@ -87,14 +61,60 @@ try:
                 self._sqs_res = new_sqs_res
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
-        
         @sqs_res.deleter
         def sqs_res(self):
             del self._sqs_res
 
-        # PROPERTY queue_res
+        # sqs_client
+        @property 
+        def sqs_client(self): 
+            return self._sqs_client
+        @sqs_client.setter
+        def sqs_client(self, client = None):
+            if client is not None:
+                self._sqs_client = client
+        @sqs_client.deleter
+        def sqs_client(self):
+            print('Deleting generated queues...')
+            del self.generated_queues
+            print('Done')
+            del self._sqs_client
+
+        # s3_res
         @property
-        def queue_res(self, sqs_res:any = None, queue_name:str = 'test'):
+        def s3_res(self):
+            return self._s3_res  
+        @s3_res.setter
+        def s3_res(self, new_s3_res):
+            try:
+                buckets = new_s3_res.buckets.all()
+                if len(buckets) == 0:
+                    raise ValueError('Its s3 with no buckets')
+                self._s3_res = new_s3_res
+            except Exception as _ex:
+                print(f'{_ex} in {self.__class__.__name__}')
+        @s3_res.deleter
+        def s3_res(self):
+            del self._s3_res
+       
+        # s3_client
+        @property
+        def s3_client(self):
+            return self._s3_client
+        @s3_client.setter
+        def s3_client(self, new_s3_client):
+            try:
+                if new_s3_client is not None:
+                    self._s3_client = new_s3_client
+            except Exception as _ex:
+                print(f'{_ex} in {self.__class__.__name__}')
+        @s3_client.deleter
+        def s3_client(self):
+            del self._s3_client
+
+        # queue_resource
+        @property
+        def queue_resource(self, sqs_res:any = None, queue_name:str = 'test'):
             if self._queue_res is not None:
                 return self._queue_res
             try:
@@ -108,28 +128,24 @@ try:
                 if sqs_res is not None:
                     return self.generate_queue_res(sqs_res, delay = 15)
                 return self.generate_queue_res(delay = 15)
-        
-        @queue_res.setter
+        @queue_resource.setter
         def queue_res(self, new_queue):
             try:
                 self._sqs_res.get_queue_url(QueueName=new_queue.url.split('/')[-1].strip())['QueueUrl']
                 self._queue_res = new_queue
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
-
-        @queue_res.deleter
+        @queue_resource.deleter
         def queue_res(self):
             try:
                 del self._queue_res
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
 
-
-        # PROPERTY _generated_queues
+        # generated_queues
         @property 
         def generated_queues(self):
             return [ x.url.split('/')[-1].strip() for x in self._generated_queues ]
-
         @generated_queues.setter
         def generated_queues(self, new_queues):
             try: 
@@ -140,49 +156,32 @@ try:
                         self._generated_queues.append(queue.url)
             except Exception as _ex:
                 print(f'{_ex} in {self.__class__.__name__}')
-
         @generated_queues.deleter
         def generated_queues(self):
             counter = 0
             total = len(self._generated_queues)
 
-            #queues = boto3.resource('sqs').queues.all()
-            #for queue in queues:
-            #    boto3.client('sqs').delete_queue(QueueUrl=queue.url)#'QueueUrl']
-            #    print(f'del queue url{queue.url}')
-
             for queue_url in self._generated_queues:
                 counter =+ 1
                 try:
-                    print(f'Remove {counter}st object out of {total}.')
                     self._sqs_client.delete_queue(QueueUrl=queue_url)    
                 except Exception as _ex:
                     print(f'Object {counter} could not be deleted.\nInner exception: {_ex}')
 
             del self._generated_queues
 
+        # region_name
+        @property 
+        def region_name(self):
+            return self._region_name
+        @region_name.setter
+        def region_name(self, new_name:str = ''):
+            if new_name is not None and len(new_name)>0:
+                self._region_name = new_name
+        @region_name.deleter
+        def region_name(self):
+            del self._region_name
 
-        # PROPERTY s3_res
-        @property
-        def s3_res(self):
-            return self._s3_res  
-        
-        @s3_res.setter
-        def s3_res(self, new_s3_res):
-            try:
-                buckets = new_s3_res.buckets.all()
-                if len(buckets) == 0:
-                    raise ValueError('Its s3 with no buckets')
-                self._s3_res = new_s3_res
-            except Exception as _ex:
-                print(f'{_ex} in {self.__class__.__name__}')
-        
-        @s3_res.deleter
-        def s3_res(self):
-            del self._s3_res
-       
-        
-        @property
         def buckets(self, s3_res = None):
             """Returns set of buckets from s3"""
             try:
@@ -220,7 +219,21 @@ try:
         def queue_generate_handler(self, queue = None):
             if queue is not None and queue.url not in self._generated_queues:
                 self._generated_queues.append(queue.url)
-    
+        
+        def get_boto_object(self, boto_name: str = 'resource', boto_specify:str = 'sqs', instance:object = None):
+            try:
+                if instance is not None: 
+                    return instance
+                if boto_name in ('resource', 'client'):
+                    if boto_name == 'resource':
+                        return boto3.resource(boto_specify, region_name = self._region_name)
+                    if boto_name == 'client':
+                        return boto3.client(boto_specify, region_name =self._region_name)
+                if boto_name == 'queue':
+                    return self.generate_queue_res(delay = 10)
+            except Exception as _ex:
+                print (_ex)
+        
     class AdvancedBotoHandler(CustomBotoHandler):
         """
         This class extends the capabilities of the CustomBotoHandler. 
@@ -231,7 +244,7 @@ try:
         def __init__(self, s3_res = None, 
                         sqs_res = None, queue_res = None):
             super().__init__( s3_res, sqs_res, queue_res)
-        def __del__(sel):
+        def __del__(self):
             super().__del__()
         def send_message(self, queue = None, queue_name:str = '', message:any = {}, indx = 0):
             try:
@@ -270,7 +283,7 @@ try:
                 elif len( queue_name ) > 0:
                     if indx >= 1: 
                         return self.send_message(
-                            queue = super().queue_res,
+                            queue = super().queue_resource,
                             message=message,
                             indx = indx + 1
                             )
@@ -280,7 +293,7 @@ try:
                         )
                 else:
                     return self.send_message(
-                        queue = super().queue_res,
+                        queue = super().queue_resource,
                         message = message, 
                         indx = indx +1 
                         )
@@ -303,7 +316,7 @@ try:
                         wait_time = max_number
                         )
                 return super().sqs_client.receive_message(
-                        QueueUrl = super().queue_res.url,
+                        QueueUrl = super().queue_resource.url,
                         MaxNumberOfMessages = max_number,
                         WaitTimeSeconds = wait_time
                         )
